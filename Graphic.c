@@ -180,10 +180,10 @@ int main(void) {
 	
 	wait_for_vsync();
 	
-	//Display "Press ENTER to start"
-	draw_text(40-10, 10, start_msg);
-	
 	while (play) {
+		//Display "Press ENTER to start"
+		draw_text(40-10, 10, start_msg);
+		
 		//Display ball and players
 		draw_ball();
 		draw_plr();
