@@ -428,23 +428,6 @@ int main(void) {
 		}
 	    draw_text(40-10, 10, start_msg);
 	    while(play){
-		resetDelta();
-		draw_ball();
-		draw_plr();
-		if(keyPressed == 'E'){//Enter to start
-			start = true; 
-			clear_text(40-10, 10, start_msg);
-		}
-	   	if(score_plr1 == 700) {
-			plr2_lost = true;
-			start = false; 
-			play = false; 
-		} else if (score_plr2 == 700) {
-			plr1_lost = true; 
-			start = false;
-			play = false; 
-		}
-		keyPressed = '~';
 		if(start){
 			switch(keyPressed){
 				case 'W':
@@ -470,6 +453,23 @@ int main(void) {
 			}
 			keyPressed = '~'; 
 		}
+		draw_ball();
+		draw_plr();
+		resetDelta();
+		if(keyPressed == 'E'){//Enter to start
+			start = true; 
+			clear_text(40-10, 10, start_msg);
+		}
+	   	if(score_plr1 == 700) {
+			plr2_lost = true;
+			start = false; 
+			play = false; 
+		} else if (score_plr2 == 700) {
+			plr1_lost = true; 
+			start = false;
+			play = false; 
+		}
+		keyPressed = '~';
 		sprintf(score_plr1_text, "%d", score_plr1);
 		draw_text(1, 2, "Score:");
 		draw_text(8, 2, score_plr1_text);
