@@ -314,6 +314,7 @@ bool mv_right_plr2 = false, mv_left_plr2 = false, jump_plr2 = false;
 /* Booleans for game state */
 //The main menu
 bool main_menu = true;
+bool how_to_play = false;
 
 //When the user clicks play in the main menu, set play to true:
 bool play = false;
@@ -374,7 +375,17 @@ int main(void) {
 		clear_text(60-3, 2, "Score:");
 		clear_text(57+7, 2, score_plr2_text);
 		
-		while (main_menu) {	
+		while (main_menu) {
+			//If KEY0 is clicked, go to game screen
+			if (play) main_menu = false;
+			
+			if (how_to_play) {
+				clear screen();
+				clear_text(20-5, 45, "PLAY(KEY0)");
+				clear_text(60-12, 45, "HOW TO PLAY(KEY1)");
+				/*Add a instruction drawing here*/
+			}
+			
 			draw_text(20-5, 45, "PLAY(KEY0)");
 			draw_text(60-12, 45, "HOW TO PLAY(KEY1)");
 			draw_image(160-125, 30, 250, 90, title);
