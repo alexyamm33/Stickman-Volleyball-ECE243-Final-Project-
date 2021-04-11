@@ -298,6 +298,11 @@ int main(void) {
 		
 		/* Main menu (starting screen) */
 		while (main_menu) {
+			clear_screen();
+			draw_text(20 - 5, 45, "PLAY(1)");
+			draw_text(60 - 12, 45, "HOW TO PLAY(2)");
+			draw_image(160 - 125, 30, 250, 90, title);
+			
 			if (keyPressed == '1') {//Press 1 to start playing
 				play = true;
 				clear_screen();
@@ -310,12 +315,8 @@ int main(void) {
 				clear_text(60 - 12, 45, "HOW TO PLAY(2)");
 				how_to_play = true;
 				main_menu = false;
-			} else {
-				clear_screen();
-				draw_text(20 - 5, 45, "PLAY(1)");
-				draw_text(60 - 12, 45, "HOW TO PLAY(2)");
-				draw_image(160 - 125, 30, 250, 90, title);
 			}
+			
 			keyPressed = '~';
 			
 			wait_for_vsync();
@@ -374,7 +375,7 @@ int main(void) {
 			draw_ball();
 			draw_plr();
 
-			resetDelta();
+			//resetDelta();
 
 			if (score_plr1 == 700) {
 				start = false;
@@ -454,15 +455,14 @@ int main(void) {
 	return 0;
 }
 
-/* Reset */
+/* Reset
 void resetDelta() {
 	mv_right_plr1 = false;
 	mv_left_plr1 = false;
-	jump_plr1 = false;
 	mv_right_plr2 = false;
 	mv_left_plr2 = false;
-	jump_plr2 = false;
-}
+}*/
+
 /* Function for plotting a single pixel */
 void plot_pixel(int x, int y, short int color) {
 	*(short int*)(pixel_buffer_start + (y << 10) + (x << 1)) = color;
@@ -581,6 +581,13 @@ void draw_ball() {
 			dy_plr1 = 0;
 			dx_plr2 = 0;
 			dy_plr2 = 0;
+			
+			mv_right_plr1 = false;
+			mv_right_plr2 = false;
+			mv_left_plr1 = false;
+			mv_left_plr2 = false;
+			jump_plr1 = false;
+			jump_plr2 = false;
 
 			//Reset the game
 			start = false;
@@ -593,8 +600,8 @@ void draw_ball() {
 		else if (x_ball >= 124 && x_ball <= 164 && y_ball == 108) dy_ball *= -1;
 
 		//If the ball hits the player, bounce off
-		if (y_ball == (y_plr1 - 30) && x_ball >= (x_plr1 - 30) && x_ball <= (x_plr1 + 30)) dy_ball *= -1;
-		else if (y_ball == (y_plr2 - 30) && x_ball >= (x_plr2 - 30) && x_ball <= (x_plr2 + 30)) dy_ball *= -1;
+		if (y_ball == (y_plr1 - 30) && x_ball >= (x_plr1 - 30) && x_ball <= (x_plr1 + 30)) dy_ball = -2;
+		else if (y_ball == (y_plr2 - 30) && x_ball >= (x_plr2 - 30) && x_ball <= (x_plr2 + 30)) dy_ball = -2;
 		else if ((x_ball == (x_plr1 - 30) || x_ball == (x_plr1 + 30)) && y_ball >= (y_plr1 - 30)) dx_ball *= -1;
 		else if ((x_ball == (x_plr2 - 30) || x_ball == (x_plr2 + 30)) && y_ball >= (y_plr2 - 30)) dx_ball *= -1;
 
@@ -615,11 +622,24 @@ void draw_plr() {
 		draw_rectangle(abs(x_plr2 - 2 * dx_plr2), abs(y_plr2 - 2 * dy_plr2), 30, 40, BG);
 
 		//Controls right, left and jump
-		if (mv_right_plr1) dx_plr1 = 2;
-		if (mv_right_plr2) dx_plr2 = 2;
-
-		if (mv_left_plr1) dx_plr1 = -2;
-		if (mv_left_plr2) dx_plr2 = -2;
+		if (mv_right_plr1) {
+			dx_plr1 = 2;
+			mv_right_plr1 = false;
+		} else if (!mv_right_plr1) dx_plr1 = 0;
+		
+		if (mv_right_plr2) {
+			dx_plr2 = 2;
+			mv_right_plr2 = false;
+		} else if (!mv_right_plr2) dx_plr2 = 0;		
+		
+		if (mv_left_plr1) {
+			dx_plr1 = -2;
+			mv_left_plr1 = false;
+		} else if (!mv_left_plr1) dx_plr1 = 0;
+		if (mv_left_plr2) {
+			dx_plr2 = -2;
+			mv_left_plr2 = false;
+		} else if (!mv_left_plr2) dx_plr2 = 0;
 
 		if (jump_plr1) {
 			//When the player jumps and meets the limit, descend and stop
@@ -627,8 +647,7 @@ void draw_plr() {
 			else if (y_plr1 == PLR1_START_Y && dy_plr1 == 2) {
 				dy_plr1 = 0;
 				jump_plr1 = false;
-			}
-			else if (y_plr1 >= PLR_JUMP_Y && dy_plr1 == 2) dy_plr1 = 2;
+			} else if (y_plr1 >= PLR_JUMP_Y && dy_plr1 == 2) dy_plr1 = 2;
 			else dy_plr1 = -2;
 		}
 		if (jump_plr2) {
@@ -637,8 +656,7 @@ void draw_plr() {
 			else if (y_plr2 == PLR2_START_Y && dy_plr2 == 2) {
 				dy_plr2 = 0;
 				jump_plr2 = false;
-			}
-			else if (y_plr2 >= PLR_JUMP_Y && dy_plr2 == 2) dy_plr2 = 2;
+			} else if (y_plr2 >= PLR_JUMP_Y && dy_plr2 == 2) dy_plr2 = 2;
 			else dy_plr2 = -2;
 		}
 	}
@@ -654,8 +672,14 @@ void draw_plr() {
 	y_plr2 += dy_plr2;
 
 	//Draw players according to the movements
-	if (jump_plr1) draw_image(x_plr1, y_plr1, 30, 40, plr1_jump);
-	if (jump_plr2) draw_image(x_plr2, y_plr2, 30, 40, plr2_jump);
+	if (jump_plr1) {
+		draw_image(x_plr1, y_plr1, 30, 40, plr1_jump);
+		draw_image(x_plr2, y_plr2, 30, 40, plr2_wait);
+	}
+	if (jump_plr2) {
+		draw_image(x_plr2, y_plr2, 30, 40, plr2_jump);
+		draw_image(x_plr1, y_plr1, 30, 40, plr1_wait);
+	}
 	else {
 		draw_image(x_plr1, y_plr1, 30, 40, plr1_wait);
 		draw_image(x_plr2, y_plr2, 30, 40, plr2_wait);
