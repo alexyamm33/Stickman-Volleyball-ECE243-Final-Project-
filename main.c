@@ -426,7 +426,12 @@ int main(void) {
 	    while(play){
 		draw_ball();
 		draw_plr();
-	    
+	   	if(score_plr1 == 700) {
+			plt2_lost = true;
+			start = false; 
+			play = false; 
+		} else if ()
+		    
    }
 }
 
