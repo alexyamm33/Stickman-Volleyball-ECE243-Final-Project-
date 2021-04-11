@@ -375,14 +375,12 @@ int main(void) {
 			draw_ball();
 			draw_plr();
 
-			//resetDelta();
-
-			if (score_plr1 == 700) {
+			if (score_plr1 == 400) {
 				start = false;
 				plr2_lost = true;
 				play = false;
 			}
-			else if (score_plr2 == 700) {
+			else if (score_plr2 == 400) {
 				start = false;
 				plr1_lost = true;
 				play = false;
@@ -410,6 +408,10 @@ int main(void) {
 			clear_text(8, 2, score_plr1_text);
 			clear_text(60 - 3, 2, "Score:");
 			clear_text(57 + 7, 2, score_plr2_text);
+			
+			//Initialize scores
+			score_plr1 = 0;
+			score_plr2 = 0;
 		}
 		
 		/* Player 1 wins */
@@ -455,14 +457,6 @@ int main(void) {
 	return 0;
 }
 
-/* Reset
-void resetDelta() {
-	mv_right_plr1 = false;
-	mv_left_plr1 = false;
-	mv_right_plr2 = false;
-	mv_left_plr2 = false;
-}*/
-
 /* Function for plotting a single pixel */
 void plot_pixel(int x, int y, short int color) {
 	*(short int*)(pixel_buffer_start + (y << 10) + (x << 1)) = color;
@@ -478,9 +472,6 @@ void clear_screen() {
 		draw_rectangle(156, 140, 6, 100, GREY); //net
 		draw_rectangle(0, 230, 340, 10, WHITE); //ground
 	}
-	//center guidelines
-	//draw_rectangle(159, 0, 1, 240, RED);
-	//draw_rectangle(0, 119, 320, 1, RED);
 }
 
 /* Function for clearing the text */
@@ -600,8 +591,8 @@ void draw_ball() {
 		else if (x_ball >= 124 && x_ball <= 164 && y_ball == 108) dy_ball *= -1;
 
 		//If the ball hits the player, bounce off
-		if (y_ball == (y_plr1 - 30) && x_ball >= (x_plr1 - 30) && x_ball <= (x_plr1 + 30)) dy_ball = -2;
-		else if (y_ball == (y_plr2 - 30) && x_ball >= (x_plr2 - 30) && x_ball <= (x_plr2 + 30)) dy_ball = -2;
+		if (y_ball >= (y_plr1 - 30) && x_ball >= (x_plr1 - 30) && x_ball <= (x_plr1 + 30)) dy_ball = -2;
+		else if (y_ball >= (y_plr2 - 30) && x_ball >= (x_plr2 - 30) && x_ball <= (x_plr2 + 30)) dy_ball = -2;
 		else if ((x_ball == (x_plr1 - 30) || x_ball == (x_plr1 + 30)) && y_ball >= (y_plr1 - 30)) dx_ball *= -1;
 		else if ((x_ball == (x_plr2 - 30) || x_ball == (x_plr2 + 30)) && y_ball >= (y_plr2 - 30)) dx_ball *= -1;
 
@@ -625,21 +616,20 @@ void draw_plr() {
 		if (mv_right_plr1) {
 			dx_plr1 = 2;
 			mv_right_plr1 = false;
-		} else if (!mv_right_plr1) dx_plr1 = 0;
-		
+		}
 		if (mv_right_plr2) {
 			dx_plr2 = 2;
 			mv_right_plr2 = false;
-		} else if (!mv_right_plr2) dx_plr2 = 0;		
+		}	
 		
 		if (mv_left_plr1) {
 			dx_plr1 = -2;
 			mv_left_plr1 = false;
-		} else if (!mv_left_plr1) dx_plr1 = 0;
+		}
 		if (mv_left_plr2) {
 			dx_plr2 = -2;
 			mv_left_plr2 = false;
-		} else if (!mv_left_plr2) dx_plr2 = 0;
+		}
 
 		if (jump_plr1) {
 			//When the player jumps and meets the limit, descend and stop
@@ -670,6 +660,10 @@ void draw_plr() {
 	y_plr1 += dy_plr1;
 	x_plr2 += dx_plr2;
 	y_plr2 += dy_plr2;
+	
+	//Initialize dx for both players
+	dx_plr1 = 0;
+	dx_plr2 = 0;
 
 	//Draw players according to the movements
 	if (jump_plr1) {
@@ -680,7 +674,7 @@ void draw_plr() {
 		draw_image(x_plr2, y_plr2, 30, 40, plr2_jump);
 		draw_image(x_plr1, y_plr1, 30, 40, plr1_wait);
 	}
-	else {
+	if (!jump_plr1 && !jump_plr2) {
 		draw_image(x_plr1, y_plr1, 30, 40, plr1_wait);
 		draw_image(x_plr2, y_plr2, 30, 40, plr2_wait);
 	}
