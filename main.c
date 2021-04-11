@@ -313,7 +313,7 @@ void draw_circle(int x_centre, int y_centre, int radius, short int color);
 void draw_rectangle(int x, int y, int w, int h, short int color);
 void draw_image(int x, int y, int w, int h, int image[]);
 void draw_text(int x, int y, char* text);
-
+void resetDelta(); 
 void draw_ball();
 void draw_plr();
 /* Variable Declarations */
@@ -388,26 +388,28 @@ int main(void) {
     while(1){
 	    clear_screen();
 	    clear_text(40-12, 15, "Player 1 is the winner!");
-	    clear_text(40-13, 40, "Press KEY2 to continue..."); 
+	    clear_text(40-13, 40, "Press 0 to continue..."); 
 	    clear_text(40-10, 10, start_msg);
 	    clear_text(1, 2, "Score:");
 	    clear_text(8, 2, score_plr1_text);
 	    clear_text(60-3, 2, "Score:");
 	    clear_text(57+7, 2, score_plr2_text);
 	    while(main_menu){
-		draw_text(20-5, 45, "PLAY(KEY0)");
-		draw_text(60-12, 45, "HOW TO PLAY(KEY1)");
+		draw_text(20-5, 45, "PLAY(Press 1)");
+		draw_text(60-12, 45, "HOW TO PLAY(Press 2)");
 		draw_image(160-125, 30, 250, 90, title);
-	    	if(keyPressed == '1'){
+	    	if(keyPressed == '1'){//Press 1 to start playing
 			main_menu = false; 
 			play = true; 
-			clear screen();
-		}else if(keyPressed == '2'){
+			clear_screen();
+			clear_text(20-5, 45, "PLAY(Press 1)");
+			clear_text(60-12, 45, "HOW TO PLAY(Press 2)");
+		}else if(keyPressed == '2'){//Press 2 to look for help
 			main_menu = false;
 			how_to_play = true; 
-			clear screen();
-			clear_text(20-5, 45, "PLAY(KEY0)");
-			clear_text(60-12, 45, "HOW TO PLAY(KEY1)");
+			clear_screen();
+			clear_text(20-5, 45, "PLAY(Press 1)");
+			clear_text(60-12, 45, "HOW TO PLAY(Press 2)");
 		}
 		keyPressed = '~';
 		wait_for_vsync();
@@ -415,7 +417,7 @@ int main(void) {
 	    }
 	    while(how_to_play){
 		/*Draw help instructions*/
-		if(keyPressed == '0'){
+		if(keyPressed == '0'){ //returns back to main menu
 			main_menu = true; 
 			how_to_play = false; 
 			/*erase all help instructions here*/
@@ -423,51 +425,310 @@ int main(void) {
 		wait_for_vsync();
 		pixel_buffer_start = *(pixel_ctrl_ptr + 1);
 	    }
+		}
+	    draw_text(40-10, 10, start_msg);
 	    while(play){
+		resetDelta();
 		draw_ball();
 		draw_plr();
+		if(keyPressed == 'E'){//Enter to start
+			start = true; 
+			clear_text(40-10, 10, start_msg);
+		}
 	   	if(score_plr1 == 700) {
-			plt2_lost = true;
+			plr2_lost = true;
 			start = false; 
 			play = false; 
-		} else if ()
+		} else if (score_plr2 == 700) {
+			plr1_lost = true; 
+			start = false;
+			play = false; 
+		}
+		keyPressed = '~';
+		if(start){
+			switch(keyPressed){
+				case 'W':
+					jump_plr1 = true; 
+					break; 
+				case 'A':
+					mv_left_plr1 = true; 
+					break; 
+				case 'D': 
+					mv_right_plr1 = true; 
+					break;
+				case 'u':
+					jump_plr2 = true; 
+					break; 
+				case 'l':
+					mv_left_plr2 = true; 
+					break; 
+				case 'r': 
+					mv_right_plr2 = true;
+					break;
+				default:
+					keyPressed = '~'; 
+			}
+			keyPressed = '~'; 
+		}
+		sprintf(score_plr1_text, "%d", score_plr1);
+		draw_text(1, 2, "Score:");
+		draw_text(8, 2, score_plr1_text);
 		    
+		sprintf(score_plr2_text, "%d", score_plr2);
+		draw_text(60-3, 2, "Score:");
+		draw_text(57+7, 2, score_plr2_text);
+		wait_for_vsync();
+		pixel_buffer_start = *(pixel_ctrl_ptr + 1);
+	}
+	clear_screen();
+	wait_for_vsync();
+	clear_text(40-10, 10, start_msg);
+	clear_text(1, 2, "Score:");
+	clear_text(8, 2, score_plr1_text);
+	clear_text(60-3, 2, "Score:");
+	clear_text(57+7, 2, score_plr2_text);
+	
+	while (plr2_lost) {
+		draw_text(40-12, 15, "Player 1 is the winner!");
+		draw_text(40-13, 40, "Press 0 to continue..."); 
+		//If user clicks 0, return to main menu
+		if (keyPressed == '0') {
+			main_menu = true;
+			plr2_lost = false;
+		}
+		keyPressed = '~';
+	}
+	while (plr1_lost) {
+		draw_text(40-12, 15, "Player 2 is the winner!");
+		draw_text(40-13, 40, "Press 0 to continue..."); 
+		//If user clicks 0, return to main menu
+		if (keyPressed == '0') {
+			main_menu = true;
+			plr1_lost = false;
+		}
+		keyPressed = '~';
+	}
    }
+   return 0; 
 }
-
+/* Reset */
+void resetDelta(){
+     mv_right_plr1 = false; 
+     mv_left_plr1 = false; 
+     jump_plr1 = false;
+     mv_right_plr2 = false; 
+     mv_left_plr2 = false; 
+     jump_plr2 = false;
+}
+/* Function for plotting a single pixel */
 void plot_pixel(int x, int y, short int color) {
     *(short int *)(pixel_buffer_start + (y << 10) + (x << 1)) = color;
 }
 
+/* Function for clearing the screen */
 void clear_screen() {
 	for (int x = 0; x < RESOLUTION_X; x++) {
-		for (int y = 0; y < RESOLUTION_Y; y++) plot_pixel(x, y, BLACK);
+		for (int y = 0; y < RESOLUTION_Y; y++) plot_pixel(x, y, BG);
+	}
+	
+	if (play) {
+		draw_rectangle(156, 140, 6, 100, GREY); //net
+		draw_rectangle(0, 230, 340, 10, WHITE); //ground
+	}
+	//center guidelines
+	//draw_rectangle(159, 0, 1, 240, RED);
+	//draw_rectangle(0, 119, 320, 1, RED);
+}
+
+/* Function for clearing the text */
+void clear_text(int x, int y, char* text) {
+	int offset = (y << 7) + x;
+	
+	while (*(text)) {
+		*(char_buffer + offset) = ' '; //write to the character buffer
+		text++;
+		offset++;
 	}
 }
 
+/* Function to wait for vsync */
 void wait_for_vsync() {
-	volatile int* pixel_ctrl_ptr = (int*)0xFF203020;
-	volatile int* status = (int*) 0xFF20302C;
-	// lauch swap process
-	(*pixel_ctrl_ptr) = 1; // sets S = 1
-	// poll status bit
-	while (*status & 0x01) {
-		continue; 
+	//volatile int* pixel_ctrl_ptr = (int*)0xFF203020;
+	int status;
+	//lauch swap process
+	*pixel_ctrl_ptr = 1; //sets S = 1
+	//poll status bit
+	status = *(pixel_ctrl_ptr + 3); //dereference status reg
+	while ((status & 0x01)!=0) {
+		status = *(pixel_ctrl_ptr+3);
 	}
 	// exit when status bit S = 0
 }
 
-void draw_circle(int x_centre, int y_centre, int radius, short int color) {
-	for (int x = (x_centre-radius); x <= (x_centre+radius); x++) {
-		for (int y = (y_centre-radius); y <= (y_centre+radius); y++) {
-			// Use circle equation: (x-a)^2 + (y-b)^2 = r^2
-			double check_r = sqrt(pow((x - x_centre), 2) + pow((y - y_centre), 2));
-			if (check_r <= radius) plot_pixel(x, y, color);
+// void draw_circle(int x_centre, int y_centre, int radius, short int color) {
+// 	for (int x = (x_centre-radius); x <= (x_centre+radius); x++) {
+// 		for (int y = (y_centre-radius); y <= (y_centre+radius); y++) {
+// 			// Use circle equation: (x-a)^2 + (y-b)^2 = r^2
+// 			double check_r = sqrt(pow((x - x_centre), 2) + pow((y - y_centre), 2));
+// 			if (check_r <= radius) plot_pixel(x, y, color);
+// 		}
+// 	}
+	
+// }
+
+/* Function to draw rectangle for net, ground, and clearing previously drawn objects */
+void draw_rectangle(int x, int y, int w, int h, short int color) {
+	for (int i = 0; i < w; i++) {
+		for (int j = 0; j < h; j++) plot_pixel(x+i, y+j, color);
+	}
+}	
+
+/* Function to draw an image including ball and players */
+void draw_image(int x, int y, int w, int h, int image[]) {
+	int counter=0;
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			plot_pixel(x+j, y+i, image[counter]);
+			counter++;
+		}
+	}
+}
+
+/* Function to display text on screen using character buffer */
+void draw_text(int x, int y, char* text) {
+	int offset = (y << 7) + x;
+	
+	while (*(text)) {
+		*(char_buffer + offset) = *(text); //write to the character buffer
+		text++;
+		offset++;
+	}
+}
+
+
+/* Function to control the position of the ball and draw it */
+void draw_ball() {
+	if (start) {
+		//Overlap the previously drawn ball with black squre
+		draw_rectangle(abs(x_ball-2*dx_ball), abs(y_ball-2*dy_ball), BALL_SIZE, BALL_SIZE, BG);
+		
+		//If the ball hits the ground, add points to the winner player and reset the game
+		if (y_ball == (228-30)) {
+			//Clear previously drawn balls and players
+			wait_for_vsync();
+			draw_rectangle(abs(x_ball-dx_ball), abs(y_ball-dy_ball), BALL_SIZE, BALL_SIZE, BG);	
+			draw_rectangle(abs(x_plr1-dx_plr1), abs(y_plr1-dy_plr1), 30, 40, BG);
+			draw_rectangle(abs(x_plr2-dx_plr2), abs(y_plr2-dy_plr2), 30, 40, BG);
+			
+			pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
+			draw_rectangle(abs(x_ball), abs(y_ball), BALL_SIZE, BALL_SIZE, BG);
+			draw_rectangle(abs(x_plr1), abs(y_plr1), 30, 40, BG);
+			draw_rectangle(abs(x_plr2), abs(y_plr2), 30, 40, BG);
+			
+			if (x_ball <= 124) { //player 1 wins
+				score_plr1 += 100; //add score
+				dx_ball = 2; //start the next game with ball moving to loser's side
+			}
+			
+			else if (x_ball >= 164) { //player 2 wins
+				score_plr2 += 100; //add score
+				dx_ball = -2; //start the next game with ball moving to loser's side
+			}
+				
+			//Initialize every variables
+			x_ball = BALL_START_X;
+			y_ball = BALL_START_Y;
+			dy_ball = 2;
+
+			x_plr1 = PLR1_START_X;
+			x_plr2 = PLR2_START_X;
+			y_plr1 = PLR1_START_Y;
+			y_plr2 = PLR2_START_Y;
+
+			dx_plr1 = 0;
+			dy_plr1 = 0;
+			dx_plr2 = 0;
+			dy_plr2 = 0;
+
+			//Reset the game
+			start = false;
+		}
+		
+		//If the ball hits the edge of the screen or the net, bounce off
+		if (x_ball == (318-30) || x_ball == 2) dx_ball *= -1;
+		else if (y_ball == 2) dy_ball *= -1;
+		else if ((x_ball == 124 && y_ball >= 110) || (x_ball == 164 && y_ball >= 110)) dx_ball *= -1;
+		else if (x_ball >= 124 && x_ball <= 164 && y_ball == 108) dy_ball *= -1;
+		
+		//If the ball hits the player, bounce off
+		if (y_ball == (y_plr1 - 30) && x_ball >= (x_plr1 - 30) && x_ball <= (x_plr1 + 30)) dy_ball *= -1;
+		else if (y_ball == (y_plr2 - 30) && x_ball >= (x_plr2 - 30) && x_ball <= (x_plr2 + 30)) dy_ball *= -1;
+		else if ((x_ball == (x_plr1 - 30) || x_ball == (x_plr1 + 30)) && y_ball >= (y_plr1 - 30)) dx_ball *= -1;
+		else if ((x_ball == (x_plr2 - 30) || x_ball == (x_plr2 + 30)) && y_ball >= (y_plr2 - 30)) dx_ball *= -1;
+		
+		//Update the position
+		x_ball += dx_ball;
+		y_ball += dy_ball;
+	}
+	
+	//Draw the ball
+	draw_image(x_ball, y_ball, BALL_SIZE, BALL_SIZE, ball);
+}
+
+/* Function to control the position of players and draw them */
+void draw_plr() {
+	if (start) {
+		//Clear previoiusly drawn players
+		draw_rectangle(abs(x_plr1 - 2*dx_plr1), abs(y_plr1 - 2*dy_plr1), 30, 40, BG);
+		draw_rectangle(abs(x_plr2 - 2*dx_plr2), abs(y_plr2 - 2*dy_plr2), 30, 40, BG);
+		
+		//Controls right, left and jump
+		if (mv_right_plr1) dx_plr1 = 2;
+		if (mv_right_plr2) dx_plr2 = 2;
+		
+		if (mv_left_plr1) dx_plr1 = -2;
+		if (mv_left_plr2) dx_plr2 = -2;
+		
+		if (jump_plr1) {
+			//When the player jumps and meets the limit, descend and stop
+			if (y_plr1 == PLR_JUMP_Y) dy_plr1 = 2;
+			else if (y_plr1 == PLR1_START_Y && dy_plr1 == 2) {
+				dy_plr1 = 0;
+				jump_plr1 = false;
+			}
+			else if (y_plr1 >= PLR_JUMP_Y && dy_plr1 == 2) dy_plr1 = 2;
+			else dy_plr1 = -2;
+		}
+		if (jump_plr2) {
+			//When the player jumps and meets the limit, descend and stop
+			if (y_plr2 == PLR_JUMP_Y) dy_plr2 = 2;
+			else if (y_plr2 == PLR2_START_Y && dy_plr2 == 2) {
+				dy_plr2 = 0;
+				jump_plr2 = false;
+			}
+			else if (y_plr2 >= PLR_JUMP_Y && dy_plr2 == 2) dy_plr2 = 2;
+			else dy_plr2 = -2;
 		}
 	}
 	
-}
+	//When the player reaches the edges of screen, stop:
+	if (x_plr1 == 0 || x_plr1 == 124) dx_plr1 = 0;
+	if (x_plr2 == (318-30) || x_plr2 == 164) dx_plr2 = 0;
 
+	//Update players' positions
+	x_plr1 += dx_plr1;
+	y_plr1 += dy_plr1;
+	x_plr2 += dx_plr2;
+	y_plr2 += dy_plr2;
+	
+	//Draw players according to the movements
+	if (jump_plr1) draw_image(x_plr1, y_plr1, 30, 40, plr1_jump);
+	if (jump_plr2) draw_image(x_plr2, y_plr2, 30, 40, plr2_jump);
+	else {
+		draw_image(x_plr1, y_plr1, 30, 40, plr1_wait);
+		draw_image(x_plr2, y_plr2, 30, 40, plr2_wait);
+	}
+}
 void enable_A9_interrupts() {
 	int status = 0b01010011;
 	asm("msr cpsr, %[ps]" : : [ps]"r"(status));
@@ -557,17 +818,26 @@ void PS2_ISR(){
 		byte1 = byte2;
 		byte2 = data;
 		data = PS2_data & 0xFF;
-
-		  //determine P1 movement (W/A/S/D)
-			if(data == 0x1D) {
+			//Window switching (1/2/0/ENTER)
+			if(data == 0x16) {
+				LED = 0x16;
+				keyPressed = '1';
+			} else if(data == 0x45) {
+				LED = 0x45;
+				keyPressed = '0';
+			} else if(data == 0x1E) {
+				LED = 0x1E;
+				keyPressed = '2';
+			} else if(data == 0x5A) {
+				LED = 0x5A;
+				keyPressed = 'E';			
+		 	 //determine P1 movement (W/A/S/D)
+			}else if(data == 0x1D) {
 				LED = 0x1D;
 				keyPressed = 'W';
 			} else if(data == 0x1C) {
 				LED = 0x1C;
 				keyPressed = 'A';
-			} else if(data == 0x1B) {
-				LED = 0x1B;
-				keyPressed = 'S';
 			} else if(data == 0x23) {
 				LED = 0x23;
 				keyPressed = 'D';
@@ -582,9 +852,6 @@ void PS2_ISR(){
 			} else if(data == 0x74) {
 				LED = 0x74;
 				keyPressed = 'r';
-			} else if(data == 0x72) {
-				LED = 0x72;
-				keyPressed = 'd';
 			//error handling
 			} else {
 				LED = 0xCFFF;
@@ -653,6 +920,5 @@ void set_A9_IRQ_stack() {
 	mode = 0b11010011;
 	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
 }
-
-
+	
 
