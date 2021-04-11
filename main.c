@@ -295,23 +295,22 @@ int main(void) {
 		clear_text(8, 2, score_plr1_text);
 		clear_text(60 - 3, 2, "Score:");
 		clear_text(57 + 7, 2, score_plr2_text);
-
+		
+		/* Main menu (starting screen) */
 		while (main_menu) {
 			if (keyPressed == '1') {//Press 1 to start playing
+				play = true;
 				clear_screen();
 				clear_text(20 - 5, 45, "PLAY(1)");
 				clear_text(60 - 12, 45, "HOW TO PLAY(2)");
-				play = true;
 				main_menu = false;
-			}
-			else if (keyPressed == '2') {//Press 2 to look for help
+			} else if (keyPressed == '2') {//Press 2 to look for help
 				clear_screen();
 				clear_text(20 - 5, 45, "PLAY(1)");
 				clear_text(60 - 12, 45, "HOW TO PLAY(2)");
 				how_to_play = true;
 				main_menu = false;
-			}
-			else {
+			} else {
 				clear_screen();
 				draw_text(20 - 5, 45, "PLAY(1)");
 				draw_text(60 - 12, 45, "HOW TO PLAY(2)");
@@ -322,7 +321,8 @@ int main(void) {
 			wait_for_vsync();
 			pixel_buffer_start = *(pixel_ctrl_ptr + 1);
 		}
-
+		
+		/* Instruction page */
 		while (how_to_play) {
 			if (keyPressed == '0') { //returns back to main menu
 				main_menu = true;
@@ -334,10 +334,10 @@ int main(void) {
 			wait_for_vsync();
 			pixel_buffer_start = *(pixel_ctrl_ptr + 1);
 		}
-
-		//Display "Press ENTER to start"
-		draw_text(40 - 10, 10, start_msg);
-
+		
+		if (play) clear_screen();
+		
+		/* Play screen */
 		while (play) {
 			if (start) {
 				switch (keyPressed) {
@@ -363,7 +363,8 @@ int main(void) {
 					keyPressed = '~';
 				}
 				keyPressed = '~';
-			}
+			} else draw_text(40 - 10, 10, start_msg); //Display "Press ENTER to start"
+			
 			if (keyPressed == 'E') {//Enter to start
 				clear_text(40 - 10, 10, start_msg);
 				start = true;
@@ -376,13 +377,13 @@ int main(void) {
 			resetDelta();
 
 			if (score_plr1 == 700) {
-				plr2_lost = true;
 				start = false;
+				plr2_lost = true;
 				play = false;
 			}
 			else if (score_plr2 == 700) {
-				plr1_lost = true;
 				start = false;
+				plr1_lost = true;
 				play = false;
 			}
 
@@ -400,19 +401,20 @@ int main(void) {
 			wait_for_vsync();
 			pixel_buffer_start = *(pixel_ctrl_ptr + 1);
 		}
-
-		//Clear game screen
-		clear_screen();
-		wait_for_vsync();
-
-		//Clear every drawn texts
-		clear_text(40 - 10, 10, start_msg);
-		clear_text(1, 2, "Score:");
-		clear_text(8, 2, score_plr1_text);
-		clear_text(60 - 3, 2, "Score:");
-		clear_text(57 + 7, 2, score_plr2_text);
-
+		
+		if (plr1_lost || plr2_lost) {
+			//Clear every drawn texts
+			clear_text(40 - 10, 10, start_msg);
+			clear_text(1, 2, "Score:");
+			clear_text(8, 2, score_plr1_text);
+			clear_text(60 - 3, 2, "Score:");
+			clear_text(57 + 7, 2, score_plr2_text);
+		}
+		
+		/* Player 1 wins */
 		while (plr2_lost) {
+			clear_screen();
+			
 			//If user clicks 0, return to main menu
 			if (keyPressed == '0') {
 				main_menu = true;
@@ -428,7 +430,11 @@ int main(void) {
 			wait_for_vsync();
 			pixel_buffer_start = *(pixel_ctrl_ptr + 1); //new back buffer
 		}
+		
+		/* Player 2 wins */
 		while (plr1_lost) {
+			clear_screen();
+			
 			//If user clicks 0, return to main menu
 			if (keyPressed == '0') {
 				main_menu = true;
@@ -551,14 +557,14 @@ void draw_ball() {
 			draw_rectangle(abs(x_plr1), abs(y_plr1), 30, 40, BG);
 			draw_rectangle(abs(x_plr2), abs(y_plr2), 30, 40, BG);
 
-			if (x_ball <= 124) { //player 1 wins
-				score_plr1 += 100; //add score
-				dx_ball = 2; //start the next game with ball moving to loser's side
-			}
-
-			else if (x_ball >= 164) { //player 2 wins
+			if (x_ball <= 124) { //player 2 wins
 				score_plr2 += 100; //add score
 				dx_ball = -2; //start the next game with ball moving to loser's side
+			}
+
+			else if (x_ball >= 164) { //player 1 wins
+				score_plr1 += 100; //add score
+				dx_ball = 2; //start the next game with ball moving to loser's side
 			}
 
 			//Initialize every variables
