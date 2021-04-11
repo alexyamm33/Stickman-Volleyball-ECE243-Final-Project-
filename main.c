@@ -822,11 +822,6 @@ void PS2_ISR() {
 		//}
 
 	}
-
-	//printf("data: %c\n", data);
-	HEX_PS2(byte1, byte2, data);
-
-	//printf("%c\n", keyPressed);
 	return;
 }
 
