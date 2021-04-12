@@ -701,7 +701,7 @@ void draw_plr() {
 }
 
 void enable_A9_interrupts() {
-	int status = 0b01010011;
+	int status =0b01010011;
 	asm("msr cpsr, %[ps]" : : [ps] "r"(status));
 }
 
@@ -729,7 +729,8 @@ void config_interrupt(int N, int CPU_target) {
 	value = 0x1 << index;
 	address = 0xFFFED100 + reg_offset;
 
-	/* Now that we know the register address and value, set the appropriate bit */
+        /* now that we have the register address (R4) and value (R2), we need to set the
+        * correct bit in the GIC register */
 	*(int*)address |= value;
 
 	/* Configure the Interrupt Processor Targets Register (ICDIPTRn)
@@ -758,13 +759,13 @@ void PS2_ISR() {
 	volatile int* PS2_ptr = (int*)0xFF200100;
 
 
-	int PS2_data, RAVAIL;
+	int PS2_data, RAVALID;
 	//const int W = 0x1D, A = 0x1C, S = 0x1B, D = 0x23;
 
 	PS2_data = *(PS2_ptr);
-	RAVAIL = (PS2_data & 0x8000);
+	RAVALID = (PS2_data & 0x8000);
 
-	if (RAVAIL > 0) {
+	if (RAVALID > 0) {
 
 		byte1 = byte2;
 		byte2 = data;
@@ -826,7 +827,7 @@ void PS2_ISR() {
 
 void __attribute__((interrupt)) __cs3_isr_irq() {
 	int interrupt_ID = *((int*)0xFFFEC10C); //Read the ICCIAR from the CPU Interface in the GIC
-	if (interrupt_ID == 79) { // check if interrupt is from the PS/2
+	if (interrupt_ID == 79) { // check if interrupt is from the PS/2 (79)
 		PS2_ISR();
 	}
 	else {
@@ -866,14 +867,14 @@ void set_A9_IRQ_stack() {
 	stack = 0xFFFFFFFF - 7; // top of A9 onchip memory, aligned to 8 bytes
 
 	/* change processor to IRQ mode with interrupts disabled */
-	mode = 0b11010010;
+	mode =0b11010010;
 	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
 
 	/* set banked stack pointer */
 	asm("mov sp, %[ps]" : : [ps] "r" (stack));
 
 	/* go back to SVC mode before executing subroutine return! */
-	mode = 0b11010011;
+	mode =0b11010011;
 	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
 }
 	
