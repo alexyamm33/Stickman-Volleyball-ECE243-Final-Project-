@@ -190,7 +190,6 @@ void config_GIC();
 void config_interrupt(int N, int CPU_target);
 void config_PS2s();
 void PS2_ISR();
-void HEX_PS2(char b1, char b2, char b3);
 void __attribute__((interrupt)) __cs3_isr_irq();
 void __attribute__((interrupt)) __cs3_reset();
 void __attribute__((interrupt)) __cs3_isr_undef();
@@ -207,7 +206,6 @@ void wait_for_vsync();
 void draw_rectangle(int x, int y, int w, int h, short int color);
 void draw_image(int x, int y, int w, int h, int image[]);
 void draw_text(int x, int y, char* text);
-void resetDelta();
 void draw_ball();
 void draw_plr();
 
@@ -750,26 +748,6 @@ void config_PS2s() {
 	*(PS2_ptr_interrupt) = 0x1; // enable interrupts for PS/2 by writing 1 to RE field at address 0xFF200104
 }
 
-void HEX_PS2(char b1, char b2, char b3) {
-	volatile int* HEX3_HEX0_ptr = (int*)0xFF200020;
-	volatile int* HEX5_HEX4_ptr = (int*)0xFF200030;
-
-	unsigned char seven_seg_decode_table[] = {
-		0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,0x7F, 0x67, 0x77, 0x7C, 0x39, 0x5E, 0x79, 0x71 };
-	unsigned char hex_segs[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-	unsigned int shift_buffer, nibble;
-	unsigned char code;
-	int i;
-	shift_buffer = (b1 << 16) | (b2 << 8) | b3;
-	for (i = 0; i < 6; ++i) {
-		nibble = shift_buffer & 0x0000000F;
-		code = seven_seg_decode_table[nibble];
-		hex_segs[i] = code;
-		shift_buffer = shift_buffer >> 4;
-	}
-	*(HEX3_HEX0_ptr) = *(int*)(hex_segs);
-	*(HEX5_HEX4_ptr) = *(int*)(hex_segs + 4);
-}
 
 void PS2_ISR() {
 	//clean interrupt
@@ -780,7 +758,7 @@ void PS2_ISR() {
 	volatile int* PS2_ptr = (int*)0xFF200100;
 
 
-	int PS2_data, RAVAIL, LED;
+	int PS2_data, RAVAIL;
 	//const int W = 0x1D, A = 0x1C, S = 0x1B, D = 0x23;
 
 	PS2_data = *(PS2_ptr);
@@ -794,51 +772,50 @@ void PS2_ISR() {
 		data = PS2_data & 0xFF;
 		//Window switching (1/2/0/ENTER)
 		if (data == 0x16) {
-			LED = 0x16;
+			
 			keyPressed = '1';
 		}
 		else if (data == 0x45) {
-			LED = 0x45;
+			
 			keyPressed = '0';
 		}
 		else if (data == 0x1E) {
-			LED = 0x1E;
+			
 			keyPressed = '2';
 		}
 		else if (data == 0x5A) {
-			LED = 0x5A;
+			
 			keyPressed = 'E';
 			//determine P1 movement (W/A/S/D)
 		}
 		else if (data == 0x1D) {
-			LED = 0x1D;
+			
 			keyPressed = 'W';
 		}
 		else if (data == 0x1C) {
-			LED = 0x1C;
+			
 			keyPressed = 'A';
 		}
 		else if (data == 0x23) {
-			LED = 0x23;
+			
 			keyPressed = 'D';
 
 			//determine P2 movement (up, down, left, right)
 		}
 		else if (data == 0x75) {
-			LED = 0x75;
+			
 			keyPressed = 'u';
 		}
 		else if (data == 0x6B) {
-			LED = 0x6B;
+			
 			keyPressed = 'l';
 		}
 		else if (data == 0x74) {
-			LED = 0x74;
+			
 			keyPressed = 'r';
 			//error handling
 		}
-		else {
-			LED = 0xCFFF;
+		else			
 			keyPressed = '?';
 		}
 		//}
