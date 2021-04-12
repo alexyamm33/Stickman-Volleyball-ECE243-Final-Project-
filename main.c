@@ -200,10 +200,10 @@ void __attribute__((interrupt)) __cs3_isr_dabort();
 void __attribute__((interrupt)) __cs3_isr_fiq();
 void set_A9_IRQ_stack();
 
+//for the graphics
 void clear_screen();
 void clear_text(int x, int y, char* text);
 void wait_for_vsync();
-void draw_circle(int x_centre, int y_centre, int radius, short int color);
 void draw_rectangle(int x, int y, int w, int h, short int color);
 void draw_image(int x, int y, int w, int h, int image[]);
 void draw_text(int x, int y, char* text);
@@ -254,10 +254,11 @@ volatile int* pixel_ctrl_ptr = (int*)PIXEL_BUF_CTRL_BASE; // addr of front buffe
 volatile char* char_buffer = (char*)FPGA_CHAR_BASE; // addr of character buffer base
 volatile char keyPressed;
 volatile char byte1, byte2, data;
+
 /* Start message */
 char* start_msg = "Press ENTER to start"; //size 20
 
-
+/* Main function */
 int main(void) {
 	byte1 = 0;
 	byte2 = 0;
@@ -276,8 +277,8 @@ int main(void) {
 	dx_ball = (((rand() % 2) * 2) - 1) * 2;
 	
 	//initialize a pointer to the pixel buffer, used by drawing functions
-	pixel_buffer_start = *pixel_ctrl_ptr;
-	clear_screen(); // pixel_buffer_start points to the pixel buffer
+	pixel_buffer_start = *pixel_ctrl_ptr; //pixel_buffer_start points to the pixel buffer
+	clear_screen(); 
 
 	//set back pixel buffer to start of SDRAM memory
 	*(pixel_ctrl_ptr + 1) = SDRAM_BASE;
@@ -298,22 +299,29 @@ int main(void) {
 		
 		/* Main menu (starting screen) */
 		while (main_menu) {
+			//Clear the entire screen
 			clear_screen();
 			draw_text(20 - 5, 45, "PLAY(1)");
 			draw_text(60 - 12, 45, "HOW TO PLAY(2)");
 			draw_image(160 - 125, 30, 250, 90, title);
 			
 			if (keyPressed == '1') {//Press 1 to start playing
-				play = true;
+				play = true; //for play screen
+
 				clear_screen();
 				clear_text(20 - 5, 45, "PLAY(1)");
 				clear_text(60 - 12, 45, "HOW TO PLAY(2)");
+				
+				//Leave main_menu loop
 				main_menu = false;
 			} else if (keyPressed == '2') {//Press 2 to look for help
+				how_to_play = true; //for instruction
+
 				clear_screen();
 				clear_text(20 - 5, 45, "PLAY(1)");
 				clear_text(60 - 12, 45, "HOW TO PLAY(2)");
-				how_to_play = true;
+				
+				//Leave main_menu loop
 				main_menu = false;
 			}
 			
@@ -325,17 +333,19 @@ int main(void) {
 		
 		/* Instruction page */
 		while (how_to_play) {
-			if (keyPressed == '0') { //returns back to main menu
+			if (keyPressed == '0') { //return to main menu
 				main_menu = true;
 				how_to_play = false;
 			}
 			keyPressed = '~';
 			
+			//Display instruction
 			draw_image(0, 0, 320, 240, instruction);
 			wait_for_vsync();
 			pixel_buffer_start = *(pixel_ctrl_ptr + 1);
 		}
 		
+		//Set the play screen background
 		if (play) clear_screen();
 		
 		/* Play screen */
@@ -366,7 +376,7 @@ int main(void) {
 				keyPressed = '~';
 			} else draw_text(40 - 10, 10, start_msg); //Display "Press ENTER to start"
 			
-			if (keyPressed == 'E') {//Enter to start
+			if (keyPressed == 'E') {//Press enter key to start
 				clear_text(40 - 10, 10, start_msg);
 				start = true;
 			}
@@ -375,12 +385,15 @@ int main(void) {
 			draw_ball();
 			draw_plr();
 
-			if (score_plr1 == 400) {
+			//When the player wins with 400 points
+			if (score_plr1 == 400) { //player 1 wins
+				//Go to the plr2_lost loop
 				start = false;
 				plr2_lost = true;
 				play = false;
 			}
-			else if (score_plr2 == 400) {
+			else if (score_plr2 == 400) { //player 2 wins
+				//Go to the plr2_lost loop
 				start = false;
 				plr1_lost = true;
 				play = false;
@@ -401,6 +414,7 @@ int main(void) {
 			pixel_buffer_start = *(pixel_ctrl_ptr + 1);
 		}
 		
+		//When one of the players win
 		if (plr1_lost || plr2_lost) {
 			//Clear every drawn texts
 			clear_text(40 - 10, 10, start_msg);
@@ -423,8 +437,9 @@ int main(void) {
 				main_menu = true;
 				plr2_lost = false;
 			}
-			draw_image(160 - 25, 70, 47, 90, plr1_win);
 
+			//Display image and the text
+			draw_image(160 - 25, 70, 47, 90, plr1_win);
 			draw_text(40 - 12, 15, "Player 1 is the winner!");
 			draw_text(40 - 13, 43, "Press 0 to continue...");
 			
@@ -443,8 +458,9 @@ int main(void) {
 				main_menu = true;
 				plr1_lost = false;
 			}
+			
+			//Display imange and the text
 			draw_image(160 - 25, 70, 47, 90, plr2_win);
-
 			draw_text(40 - 12, 15, "Player 2 is the winner!");
 			draw_text(40 - 13, 43, "Press 0 to continue...");
 			
@@ -464,10 +480,12 @@ void plot_pixel(int x, int y, short int color) {
 
 /* Function for clearing the screen */
 void clear_screen() {
+	//Set entire screen to the background colour
 	for (int x = 0; x < RESOLUTION_X; x++) {
 		for (int y = 0; y < RESOLUTION_Y; y++) plot_pixel(x, y, BG);
 	}
 
+	//On play screen, draw the net and the ground
 	if (play) {
 		draw_rectangle(156, 140, 6, 100, GREY); //net
 		draw_rectangle(0, 230, 340, 10, WHITE); //ground
@@ -476,10 +494,12 @@ void clear_screen() {
 
 /* Function for clearing the text */
 void clear_text(int x, int y, char* text) {
+	//Set the position of the text
 	int offset = (y << 7) + x;
-
+	
+	//Blank the specific position
 	while (*(text)) {
-		*(char_buffer + offset) = ' '; //write to the character buffer
+		*(char_buffer + offset) = ' '; 
 		text++;
 		offset++;
 	}
@@ -543,6 +563,7 @@ void draw_ball() {
 			draw_rectangle(abs(x_plr1 - dx_plr1), abs(y_plr1 - dy_plr1), 30, 40, BG);
 			draw_rectangle(abs(x_plr2 - dx_plr2), abs(y_plr2 - dy_plr2), 30, 40, BG);
 
+			//Clear currently drawn balls and players
 			pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
 			draw_rectangle(abs(x_ball), abs(y_ball), BALL_SIZE, BALL_SIZE, BG);
 			draw_rectangle(abs(x_plr1), abs(y_plr1), 30, 40, BG);
@@ -573,6 +594,7 @@ void draw_ball() {
 			dx_plr2 = 0;
 			dy_plr2 = 0;
 			
+			//Set all booleans for the players' movements to false
 			mv_right_plr1 = false;
 			mv_right_plr2 = false;
 			mv_left_plr1 = false;
@@ -607,12 +629,12 @@ void draw_ball() {
 
 /* Function to control the position of players and draw them */
 void draw_plr() {
-	if (start) {
+	if (start) { //if the user has pressed enter to start
 		//Clear previoiusly drawn players
 		draw_rectangle(abs(x_plr1 - 2 * dx_plr1), abs(y_plr1 - 2 * dy_plr1), 30, 40, BG);
 		draw_rectangle(abs(x_plr2 - 2 * dx_plr2), abs(y_plr2 - 2 * dy_plr2), 30, 40, BG);
 
-		//Controls right, left and jump
+		//Controls right and left movements
 		if (mv_right_plr1) {
 			dx_plr1 = 2;
 			mv_right_plr1 = false;
@@ -621,7 +643,6 @@ void draw_plr() {
 			dx_plr2 = 2;
 			mv_right_plr2 = false;
 		}	
-		
 		if (mv_left_plr1) {
 			dx_plr1 = -2;
 			mv_left_plr1 = false;
@@ -631,6 +652,7 @@ void draw_plr() {
 			mv_left_plr2 = false;
 		}
 
+		//Controls jump
 		if (jump_plr1) {
 			//When the player jumps and meets the limit, descend and stop
 			if (y_plr1 == PLR_JUMP_Y) dy_plr1 = 2;
