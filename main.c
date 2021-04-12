@@ -764,7 +764,6 @@ void PS2_ISR() {
 	PS2_data = *(PS2_ptr);
 	RAVAIL = (PS2_data & 0x8000);
 
-	LED = 0x01;
 	if (RAVAIL > 0) {
 
 		byte1 = byte2;
@@ -815,7 +814,7 @@ void PS2_ISR() {
 			keyPressed = 'r';
 			//error handling
 		}
-		else			
+		else{			
 			keyPressed = '?';
 		}
 		//}
@@ -877,4 +876,4 @@ void set_A9_IRQ_stack() {
 	mode = 0b11010011;
 	asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
 }
-
+	
